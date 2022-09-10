@@ -24,7 +24,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
 
   void connect() {
     // MessageModel messageModel = MessageModel(sourceId: widget.sourceChat.id.toString(),targetId: );
-    socket = IO.io("https://lifeline-socket.herokuapp.com/", <String, dynamic>{
+    socket = IO.io("http://192.168.100.26:5051", <String, dynamic>{
       "transports": ["websocket"],
       "autoConnect": false,
     });
@@ -38,6 +38,10 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
       });
 
       socket.on("error__request__ambulance", (msg) {
+        print(msg);
+      });
+
+      socket.on("search__ambulance", (msg) {
         print(msg);
       });
     });
@@ -69,8 +73,10 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
     }
   }
 
-  Future<LocationData> RecuperarLocation(Location location) async {
-    return await location.getLocation();
+  Future<LocationData> RecuperarLocation(
+      Location location, var _locationData) async {
+    _locationData = await location.getLocation();
+    return _locationData;
   }
 
   @override
@@ -78,7 +84,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
     var location = Location();
     bool _serviceEnabled = false;
     PermissionStatus _permissionGranted = PermissionStatus.denied;
-    LocationData _locationData;
+    var _locationData;
 
     CheckServices(
       location,
@@ -90,46 +96,52 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
       appBar: AppBar(
         title: Text('Lifeline'),
       ),
-      body: Column(
-        children: [
-          ScreenSelector(),
-          SizedBox(
-            height: 150,
-          ),
-          Center(
-            child: SizedBox(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Text(socket.connected ? "Conected to the server" : "Disconnected"),
+            ScreenSelector(),
+            SizedBox(
               height: 150,
-              width: 150,
-              child: Material(
-                borderRadius: BorderRadius.circular(130),
-                color: Colors.white,
-                elevation: 3,
-                child: FloatingActionButton(
-                  backgroundColor: Color.fromARGB(175, 203, 46, 231),
-                  child: Icon(
-                    Icons.health_and_safety_outlined,
-                    size: 120,
-                  ),
-                  onPressed: () {
-                    _locationData = RecuperarLocation(location) as LocationData;
-                    print(_locationData.latitude);
-                    print(_locationData.longitude);
+            ),
+            FutureBuilder(
+              future: RecuperarLocation(location, _locationData),
+              builder: (context, AsyncSnapshot snapshot) {
+                if (!snapshot.hasData) {
+                  return SnackBar(
+                      content: Text("Sorry, we couldn't find your location."));
+                } else {
+                  return Center(
+                    child: SizedBox(
+                      height: 150,
+                      width: 150,
+                      child: Material(
+                        borderRadius: BorderRadius.circular(130),
+                        color: Colors.white,
+                        elevation: 3,
+                        child: FloatingActionButton(
+                          child: Icon(
+                            Icons.health_and_safety_outlined,
+                            size: 120,
+                          ),
+                          onPressed: () {
+                            _locationData = snapshot.data;
 
-                    socket.emit('request__ambulance', {});
+                            print(_locationData.latitude);
+                            print(_locationData.longitude);
 
-                    // set up the button
+                            var location = {
+                              "latitude": _locationData.latitude,
+                              "longitude": _locationData.longitude,
+                            };
+                            print(location);
+                            socket.emit(
+                                'request__ambulance', {"location": location});
 
-                    // set up the AlertDialog
-                    FutureBuilder(
-                        future: RecuperarLocation(location),
-                        builder: (BuildContext context, snapshot) {
-                          if (!snapshot.hasData) {
-                            return SnackBar(
-                              content: Text(
-                                'We couldnt find your location',
-                              ),
-                            );
-                          } else {
+                            // set up the button
+
+                            // set up the AlertDialog
+
                             AlertDialog alert = AlertDialog(
                               // shape: RoundedRectangleBorder(
                               //     borderRadius: BorderRadius.circular(29)),
@@ -160,20 +172,17 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                                 return alert;
                               },
                             );
-                            setState(() {
-                              _locationData = snapshot.data as LocationData;
-                            });
-                            print(_locationData.latitude);
-                            print(_locationData.latitude);
-                            return Container();
-                          }
-                        });
-                  },
-                ),
-              ),
+                          },
+                          backgroundColor: Color.fromARGB(175, 203, 46, 231),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+              },
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
