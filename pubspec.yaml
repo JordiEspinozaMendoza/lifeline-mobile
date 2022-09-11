@@ -30,6 +30,10 @@ dependencies:
   cupertino_icons: ^1.0.2
   flutter:
     sdk: flutter
+  google_maps_flutter: ^2.2.0
+  google_maps_flutter_web: ^0.4.0+2
+  http: ^0.13.5
+  json_serializable: ^6.3.1
   loading_animation_widget: ^1.2.0+3
   location: ^4.4.0
   provider: ^6.0.3

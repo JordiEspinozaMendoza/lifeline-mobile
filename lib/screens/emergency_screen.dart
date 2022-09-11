@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hackathonpaciente/screens/map_screen.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
@@ -14,11 +15,12 @@ class EmergencyScreen extends StatefulWidget {
 
 class _EmergencyScreenState extends State<EmergencyScreen> {
   late IO.Socket socket;
+  bool isConnected = false;
+  bool ambulanceFound = false;
   @override
   void initState() {
     super.initState();
     // connect();
-
     connect();
   }
 
@@ -30,6 +32,9 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
     });
     socket.connect();
     socket.onConnect((data) {
+      setState(() {
+        isConnected = true;
+      });
       print("Connected");
       socket.emit('user__joined');
 
@@ -43,6 +48,12 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
 
       socket.on("search__ambulance", (msg) {
         print(msg);
+      });
+      socket.on("ambulance__found", (msg) {
+        print(msg);
+
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => MapScreen()));
       });
     });
     print(socket.connected);
@@ -99,7 +110,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Text(socket.connected ? "Conected to the server" : "Disconnected"),
+            Text(isConnected ? "Conected to the server" : "Disconnected"),
             ScreenSelector(),
             SizedBox(
               height: 150,
@@ -134,7 +145,6 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                               "latitude": _locationData.latitude,
                               "longitude": _locationData.longitude,
                             };
-                            print(location);
                             socket.emit(
                                 'request__ambulance', {"location": location});
 
