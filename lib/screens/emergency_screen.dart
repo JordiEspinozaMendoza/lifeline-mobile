@@ -53,7 +53,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
         print(msg);
 
         Navigator.push(
-            context, MaterialPageRoute(builder: (context) => MapScreen()));
+            context, MaterialPageRoute(builder: (context) => HomeScreen()));
       });
     });
     print(socket.connected);
@@ -110,6 +110,9 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            CircleAvatar(
+              backgroundImage: AssetImage('lib/assets/person.png'),
+            ),
             Text(isConnected ? "Conected to the server" : "Disconnected"),
             ScreenSelector(),
             SizedBox(

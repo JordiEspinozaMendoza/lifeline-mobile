@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hackathonpaciente/providers/screen_provider.dart';
 import 'package:hackathonpaciente/screens/emergency_screen.dart';
+import 'package:hackathonpaciente/screens/map_screen.dart';
 import 'package:hackathonpaciente/widgets/screen_selector.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'dart:io';
